@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
+// BU YERDA IMPORTLAR BO'LISHI KERAK:
+import '../cargo/data/cargo_service.dart';
+import '../cargo/domain/cargo_model.dart';
+import '../../core/widgets/cargo_card.dart';
 
-// StatefulWidget - bu ekran ichidagi ma'lumotlar (masalan, bosilgan tugma) 
-// o'zgarishi mumkin bo'lgan vidjet turi.
 class MainScreen extends StatefulWidget {
   const MainScreen({super.key});
 
@@ -10,63 +12,85 @@ class MainScreen extends StatefulWidget {
 }
 
 class _MainScreenState extends State<MainScreen> {
-  // _selectedIndex - bu butun son (int). 
-  // Pastki menyuda nechanchi tugma bosilganini eslab qoladi. 0 - birinchisi.
   int _selectedIndex = 0;
 
-  // _screens - bu vidjetlar ro'yxati (List). 
-  // Har bir menyu tugmasiga bosilganda chiqadigan alohida sahifalar.
+  // 1. _screens ro'yxatini o'zgartiramiz. 
+  // Endi har bir element shunchaki Text emas, balki StreamBuilder bo'ladi.
   final List<Widget> _screens = [
-    const Center(child: Text('В ожидании')), // 0-indeks: "Kutilmoqda"
-    const Center(child: Text('В пути')),      // 1-indeks: "Yo'lda"
-    const Center(child: Text('На складе')),   // 2-indeks: "Omborda"
-    const Center(child: Text('Получено')),    // 3-indeks: "Topshirildi"
+    // 0-vkladka: Kutilmoqda (В ожидании)
+    _buildCargoList('pending'), 
+    
+    // 1-vkladka: Yo'lda (В пути)
+    _buildCargoList('transit'), 
+    
+    // 2-vkladka: Omborda (На складе)
+    _buildCargoList('warehouse'), 
+    
+    // 3-vkladka: Topshirildi (Получено)
+    _buildCargoList('delivered'), 
   ];
+
+  // 2. Bu yerda biz kodimiz takrorlanmasligi uchun bitta umumiy "qolip" (funksiya) yaratdik.
+  // U 'status'ga qarab bizga kerakli ro'yxatni yasab beradi.
+  static Widget _buildCargoList(String status) {
+    return StreamBuilder(
+      // stream - CargoService dan ma'lumotni oqimini oladi.
+      // "USER_ID_TEST" o'rniga keyinchalik haqiqiy foydalanuvchi ID si keladi.
+      stream: CargoService().getMyCargo("USER_ID_TEST"), 
+      builder: (context, snapshot) {
+        // snapshot.connectionState - bu ulanish holati.
+        // Agar hali ma'lumot kelayotgan bo'lsa (waiting), aylanuvchi doira chiqadi.
+        if (snapshot.connectionState == ConnectionState.waiting) {
+          return const Center(child: CircularProgressIndicator());
+        }
+
+        // Agar xatolik bo'lsa yoki ma'lumot bo'sh bo'lsa.
+        if (!snapshot.hasData || snapshot.data!.isEmpty) {
+          return const Center(child: Text('Посылок пока нет'));
+        }
+
+        // .where - kelgan hamma posilkalar ichidan faqat biz so'ragan statusga mosini oladi.
+        final filteredList = snapshot.data!
+            .where((cargo) => cargo.status == status)
+            .toList();
+
+        // Agar filtrdan keyin ro'yxat bo'sh bo'lsa.
+        if (filteredList.isEmpty) {
+          return const Center(child: Text('В этой категории пусто'));
+        }
+
+        // ListView.builder - posilkalarni chiroyli ro'yxat qilib chiqaradi.
+        return ListView.builder(
+          itemCount: filteredList.length,
+          itemBuilder: (context, index) {
+            // Har bir posilka uchun biz yaratgan CargoCard vidjetini ishlatadi.
+            return CargoCard(cargo: filteredList[index]);
+          },
+        );
+      },
+    );
+  }
 
   @override
   Widget build(BuildContext context) {
-    // Scaffold - bu standart ekran qurilmasi (shabloni).
     return Scaffold(
-      // body - ekranning asosiy qismi. 
-      // Biz ro'yxatdan hozirgi tanlangan indeksga mos sahifani olib ko'rsatamiz.
+      // 3. body qismi biz tepada yaratgan ro'yxatdan kerakli sahifani oladi.
       body: _screens[_selectedIndex], 
-      
-      // bottomNavigationBar - ekranning eng pastki qismidagi navigatsiya paneli.
       bottomNavigationBar: BottomNavigationBar(
-        currentIndex: _selectedIndex, // Hozir qaysi tugma tanlangani (yoniq turishi).
-        
-        // onTap - foydalanuvchi tugmani bosganida ishlaydigan funksiya.
-        // 'index' - bu bosilgan tugmaning tartib raqami (0, 1, 2 yoki 3).
+        currentIndex: _selectedIndex,
         onTap: (index) {
-          // setState - Flutter'ga "Ma'lumot o'zgardi, ekranni yangidan chiz!" degan buyruq.
           setState(() {
-            _selectedIndex = index; // Yangi raqamni saqlaymiz.
+            _selectedIndex = index;
           });
         },
-        
-        // type: Fixed - menyu elementlari joyida qimirlamay turishi uchun.
         type: BottomNavigationBarType.fixed,
-        selectedItemColor: Colors.blueAccent, // Tanlangan tugmaning rangi.
-        unselectedItemColor: Colors.grey,     // Tanlanmagan tugmalarning rangi.
-        
-        // items - menyudagi tugmalarning o'zi. Kamida 2 ta bo'lishi shart.
+        selectedItemColor: Colors.blueAccent,
+        unselectedItemColor: Colors.grey,
         items: const [
-          BottomNavigationBarItem(
-            icon: Icon(Icons.hourglass_bottom), 
-            label: 'Ожидание', // "Kutilmoqda" matni ruscha
-          ),
-          BottomNavigationBarItem(
-            icon: Icon(Icons.local_shipping), 
-            label: 'В пути', // "Yo'lda" matni ruscha
-          ),
-          BottomNavigationBarItem(
-            icon: Icon(Icons.inventory_2), 
-            label: 'Склад', // "Ombor" matni ruscha
-          ),
-          BottomNavigationBarItem(
-            icon: Icon(Icons.check_circle), 
-            label: 'Получено', // "Topshirildi" matni ruscha
-          ),
+          BottomNavigationBarItem(icon: Icon(Icons.hourglass_bottom), label: 'Ожидание'),
+          BottomNavigationBarItem(icon: Icon(Icons.local_shipping), label: 'В пути'),
+          BottomNavigationBarItem(icon: Icon(Icons.inventory_2), label: 'Склад'),
+          BottomNavigationBarItem(icon: Icon(Icons.check_circle), label: 'Получено'),
         ],
       ),
     );
