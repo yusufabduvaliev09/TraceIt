@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
-import '../cargo/domain/cargo_model.dart';
-
+import 'package:traceit/features/cargo/domain/cargo_model.dart';
 class CargoCard extends StatelessWidget {
   final CargoModel cargo;
   const CargoCard({super.key, required this.cargo});

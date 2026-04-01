@@ -1,8 +1,7 @@
 import 'package:flutter/material.dart';
-// BU YERDA IMPORTLAR BO'LISHI KERAK:
-import '../cargo/data/cargo_service.dart';
-import '../cargo/domain/cargo_model.dart';
-import '../../core/widgets/cargo_card.dart';
+import 'package:traceit/features/cargo/data/cargo_service.dart'; // To'liq yo'l
+import 'package:traceit/features/cargo/domain/cargo_model.dart'; // To'liq yo'l
+import 'package:traceit/core/widgets/cargo_card.dart';        // To'liq yo'l
 
 class MainScreen extends StatefulWidget {
   const MainScreen({super.key});
