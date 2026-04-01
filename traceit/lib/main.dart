@@ -46,7 +46,7 @@ class TestScreen extends StatelessWidget {
             const Icon(Icons.check_circle, color: Colors.green, size: 100),
             const SizedBox(height: 20),
             const Text(
-              "Firebase подключен успешно!",
+              "Firebase подключен успе!",
               style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold),
             ),
             const SizedBox(height: 10),
