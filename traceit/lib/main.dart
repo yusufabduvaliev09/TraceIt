@@ -2,9 +2,19 @@ import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
 
 void main() async {
-  // Это обязательные строки для инициализации Firebase
   WidgetsFlutterBinding.ensureInitialized();
-  await Firebase.initializeApp(); 
+  
+  // Заменяем пустой вызов на детальный
+  await Firebase.initializeApp(
+    options: const FirebaseOptions(
+      apiKey: 'AIzaSyBu48EPBKzXCE8s9kny8U2AQJtV5jPl_t0', 
+      appId: '1:98494377430:ios:99bfc786fcf5e605b30877', 
+      messagingSenderId: '98494377430', 
+      projectId: 'traseit-939b6', // Твой ID проекта
+      storageBucket: 'traseit-939b6.appspot.com',
+      iosBundleId: 'com.traceit', // Проверь этот ID в Xcode
+    ),
+  ); 
   
   runApp(const CargoApp());
 }
@@ -17,14 +27,12 @@ class CargoApp extends StatelessWidget {
     return MaterialApp(
       debugShowCheckedModeBanner: false,
       title: 'TraceIt Cargo',
-      // Наша тема (пока стандартная темная)
-      theme: ThemeData.dark(), 
-      home: const TestScreen(),
+      theme: ThemeData.dark(), // Тёмная тема
+      home: const TestScreen(), // Пока оставляем этот экран для теста
     );
   }
 }
 
-// Временный экран, чтобы проверить, что всё работает
 class TestScreen extends StatelessWidget {
   const TestScreen({super.key});
 
@@ -39,10 +47,10 @@ class TestScreen extends StatelessWidget {
             const SizedBox(height: 20),
             const Text(
               "Firebase подключен успешно!",
-              style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+              style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold),
             ),
             const SizedBox(height: 10),
-            const Text("Теперь можно делать регистрацию"),
+            const Text("Сеньор одобряет. Идем дальше?"),
           ],
         ),
       ),
