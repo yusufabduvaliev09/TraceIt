@@ -1,5 +1,8 @@
 import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
+import 'package:traceit/core/router.dart';
+import 'package:traceit/features/auth/presentation/auth_provider.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -24,35 +27,13 @@ class CargoApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return MaterialApp(
-      debugShowCheckedModeBanner: false,
-      title: 'TraceIt Cargo',
-      theme: ThemeData.dark(), // Тёмная тема
-      home: const TestScreen(), // Пока оставляем этот экран для теста
-    );
-  }
-}
-
-class TestScreen extends StatelessWidget {
-  const TestScreen({super.key});
-
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      body: Center(
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            const Icon(Icons.check_circle, color: Colors.green, size: 100),
-            const SizedBox(height: 20),
-            const Text(
-              "Firebase подключен успе!",
-              style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold),
-            ),
-            const SizedBox(height: 10),
-            const Text("Сеньор одобряет. Идем дальше?"),
-          ],
-        ),
+    return ChangeNotifierProvider(
+      create: (_) => AuthProvider(),
+      child: MaterialApp.router(
+        debugShowCheckedModeBanner: false,
+        title: 'TraceIt Cargo',
+        theme: ThemeData.dark(),
+        routerConfig: appRouter,
       ),
     );
   }
