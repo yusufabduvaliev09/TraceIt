@@ -61,6 +61,15 @@ class _MainScreenState extends State<MainScreen> {
     return StreamBuilder<Map<String, dynamic>?>(
       stream: authProvider.userDocumentStream(),
       builder: (context, snapshot) {
+        final isBlocked = (snapshot.data?['isBlocked'] ?? false) == true;
+        if (isBlocked) {
+          WidgetsBinding.instance.addPostFrameCallback((_) {
+            authProvider.logout();
+          });
+          return const Scaffold(
+            body: Center(child: Text('Пользователь заблокирован администратором')),
+          );
+        }
         final role = (snapshot.data?['role'] ?? 'user').toString();
         final isAdminOrDev = role == 'admin' || role == 'dev';
 

@@ -1,3 +1,4 @@
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:go_router/go_router.dart';
 import 'package:traceit/features/auth/presentation/auth_screen.dart';
@@ -7,12 +8,22 @@ import 'package:traceit/features/admin/presentation/admin_panel_screen.dart';
 
 final appRouter = GoRouter(
   initialLocation: '/',
-  redirect: (context, state) {
+  redirect: (context, state) async {
+    final path = state.matchedLocation;
     final loggedIn = FirebaseAuth.instance.currentUser != null;
-    final loggingIn = state.matchedLocation == '/auth';
+    final loggingIn = path == '/auth';
+    final goingAdmin = path == '/admin';
 
     if (!loggedIn && !loggingIn) return '/auth';
     if (loggedIn && loggingIn) return '/main';
+    if (goingAdmin) {
+      final uid = FirebaseAuth.instance.currentUser!.uid;
+      final doc = await FirebaseFirestore.instance.collection('users').doc(uid).get();
+      final role = (doc.data()?['role'] ?? 'user').toString();
+      if (role != 'admin' && role != 'dev') {
+        return '/main';
+      }
+    }
     return null;
   },
   routes: [

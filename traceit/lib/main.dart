@@ -1,6 +1,7 @@
 import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:traceit/core/constants/theme.dart';
 import 'package:traceit/core/router.dart';
 import 'package:traceit/features/auth/presentation/auth_provider.dart';
 
@@ -32,7 +33,7 @@ class CargoApp extends StatelessWidget {
       child: MaterialApp.router(
         debugShowCheckedModeBanner: false,
         title: 'TraceIt Cargo',
-        theme: ThemeData.dark(),
+        theme: AppTheme.darkTheme,
         routerConfig: appRouter,
       ),
     );

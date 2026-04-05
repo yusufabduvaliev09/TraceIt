@@ -1,6 +1,9 @@
 import 'package:flutter/material.dart';
+import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
+import 'package:traceit/features/auth/components/auth_gradient_button.dart';
+import 'package:traceit/features/auth/components/kg_phone_formatter.dart';
 import 'package:traceit/features/auth/presentation/auth_provider.dart';
 
 class RegisterScreen extends StatefulWidget {
@@ -12,7 +15,7 @@ class RegisterScreen extends StatefulWidget {
 
 class _RegisterScreenState extends State<RegisterScreen> {
   final _nameController = TextEditingController();
-  final _phoneController = TextEditingController();
+  final _phoneController = TextEditingController(text: KgPhoneFormatter.prefix);
   final _passwordController = TextEditingController();
   final _formKey = GlobalKey<FormState>();
   String _selectedPvz = 'Бишкек, Склад №1';
@@ -60,29 +63,45 @@ class _RegisterScreenState extends State<RegisterScreen> {
         children: [
           TextFormField(
             controller: _nameController,
-            decoration: const InputDecoration(labelText: 'Name'),
+            decoration: const InputDecoration(
+              labelText: 'Имя',
+              prefixIcon: Icon(FontAwesomeIcons.user),
+            ),
             validator: (value) =>
-                (value == null || value.trim().isEmpty) ? 'Required' : null,
+                (value == null || value.trim().isEmpty) ? 'Введите имя' : null,
           ),
           const SizedBox(height: 12),
           TextFormField(
             controller: _phoneController,
-            decoration: const InputDecoration(labelText: 'Phone Number'),
+            keyboardType: TextInputType.phone,
+            inputFormatters: [KgPhoneFormatter()],
+            decoration: const InputDecoration(
+              labelText: 'Номер телефона',
+              prefixIcon: Icon(FontAwesomeIcons.phone),
+            ),
             validator: (value) =>
-                (value == null || value.trim().isEmpty) ? 'Required' : null,
+                (value == null || value.replaceAll(' ', '').length < 13)
+                    ? 'Введите номер +996'
+                    : null,
           ),
           const SizedBox(height: 12),
           TextFormField(
             controller: _passwordController,
-            decoration: const InputDecoration(labelText: 'Password'),
+            decoration: const InputDecoration(
+              labelText: 'Пароль',
+              prefixIcon: Icon(FontAwesomeIcons.lock),
+            ),
             obscureText: true,
             validator: (value) =>
-                (value == null || value.length < 6) ? 'Min 6 chars' : null,
+                (value == null || value.length < 6) ? 'Минимум 6 символов' : null,
           ),
           const SizedBox(height: 12),
           DropdownButtonFormField<String>(
             initialValue: _selectedPvz,
-            decoration: const InputDecoration(labelText: 'PVZ Selection'),
+            decoration: const InputDecoration(
+              labelText: 'Выберите ПВЗ',
+              prefixIcon: Icon(FontAwesomeIcons.warehouse),
+            ),
             items: _pvzOptions
                 .map((pvz) => DropdownMenuItem(value: pvz, child: Text(pvz)))
                 .toList(),
@@ -93,15 +112,10 @@ class _RegisterScreenState extends State<RegisterScreen> {
             },
           ),
           const SizedBox(height: 20),
-          ElevatedButton(
+          AuthGradientButton(
             onPressed: auth.isLoading ? null : _submit,
-            child: auth.isLoading
-                ? const SizedBox(
-                    width: 18,
-                    height: 18,
-                    child: CircularProgressIndicator(strokeWidth: 2),
-                  )
-                : const Text('Register'),
+            label: 'Зарегистрироваться',
+            isLoading: auth.isLoading,
           ),
         ],
       ),

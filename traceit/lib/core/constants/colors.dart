@@ -1,16 +1,20 @@
-import 'package:flutter/material.dart'; // Flutter'ning tayyor UI elementlarini ishlatish uchun kerak
+import 'package:flutter/material.dart';
 
-class AppColors { // Ranglarni bitta guruhga (klassga) yig'amiz
-  
-  // Static - bu rangni ishlatish uchun klassdan yangi nusxa olish shart emasligini bildiradi
-  // const - bu rang ilova davomida hech qachon o'zgarmasligini bildiradi
-  // Color(0xFF...) - rangning HEX kodi. 'FF' - shaffoflik (100% ko'rinadi)
-  
-  static const Color primary = Color(0xFF6200EE); // Asosiy rang (masalan, tugmalar uchun)
-  static const Color background = Color(0xFF121212); // To'q mavzu uchun fon rangi
-  static const Color surface = Color(0xFF1E1E1E); // Kartochkalar va panellar rangi
-  static const Color textMain = Color(0xFFFFFFFF); // Asosiy oq matn
-  static const Color textSecondary = Color(0xB3FFFFFF); // Biroz xiralashgan matn (70% ko'rinishda)
-  static const Color accent = Color(0xFF03DAC6); // Diqqatni tortuvchi elementlar rangi
-  static const Color error = Color(0xFFCF6679); // Xatolik rangi
+class AppColors {
+  static const Color background = Color(0xFF090E1A);
+  static const Color surface = Color(0xFF121A2B);
+  static const Color surfaceAlt = Color(0xFF1A2740);
+  static const Color glassStroke = Color(0x66FFFFFF);
+  static const Color textMain = Color(0xFFF5F8FF);
+  static const Color textSecondary = Color(0xFF9CAAC7);
+  static const Color accent = Color(0xFF1EC8FF);
+  static const Color accent2 = Color(0xFF6F7CFF);
+  static const Color success = Color(0xFF5DFFB2);
+  static const Color error = Color(0xFFFF5A7A);
+
+  static const LinearGradient primaryGradient = LinearGradient(
+    colors: [accent2, accent],
+    begin: Alignment.centerLeft,
+    end: Alignment.centerRight,
+  );
 }

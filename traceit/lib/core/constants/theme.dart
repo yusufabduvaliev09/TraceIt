@@ -1,41 +1,65 @@
 import 'package:flutter/material.dart';
-import 'colors.dart'; // Yuqorida yaratgan ranglarimizni bu yerga chaqiramiz
+import 'package:traceit/core/constants/colors.dart';
 
 class AppTheme {
-  // darkTheme nomli o'zgaruvchi yaratamiz
   static ThemeData darkTheme = ThemeData(
-    brightness: Brightness.dark, // Ilovaga bu 'To'q mavzu' ekanini bildiradi
-    scaffoldBackgroundColor: AppColors.background, // Ilova ekranlarining foni
-    
-    // ColorScheme - bu ilovadagi tizimli ranglar xaritasi
+    brightness: Brightness.dark,
+    scaffoldBackgroundColor: AppColors.background,
+    fontFamily: 'SF Pro Display',
     colorScheme: const ColorScheme.dark(
-      primary: AppColors.primary,
+      primary: AppColors.accent,
       secondary: AppColors.accent,
       surface: AppColors.surface,
       error: AppColors.error,
+      onPrimary: AppColors.textMain,
+      onSurface: AppColors.textMain,
     ),
-
-    // Matnlar uslubi (Text Theme)
     textTheme: const TextTheme(
       displayLarge: TextStyle(
-        fontSize: 32, 
-        fontWeight: FontWeight.bold, 
+        fontSize: 32,
+        fontWeight: FontWeight.w700,
+        color: AppColors.textMain,
+      ),
+      titleLarge: TextStyle(
+        fontSize: 22,
+        fontWeight: FontWeight.w700,
         color: AppColors.textMain,
       ),
       bodyLarge: TextStyle(
-        fontSize: 16, 
+        fontSize: 16,
         color: AppColors.textMain,
       ),
+      bodyMedium: TextStyle(
+        fontSize: 14,
+        color: AppColors.textSecondary,
+      ),
     ),
-
-    // Tugmalarning umumiy dizayni
     elevatedButtonTheme: ElevatedButtonThemeData(
       style: ElevatedButton.styleFrom(
-        backgroundColor: AppColors.primary, // Tugma rangi
-        foregroundColor: Colors.white, // Tugma ichidagi yozuv rangi
+        foregroundColor: AppColors.textMain,
+        backgroundColor: AppColors.accent2,
+        minimumSize: const Size.fromHeight(52),
         shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(12), // Tugma chetini yumaloqlash
+          borderRadius: BorderRadius.circular(20),
         ),
+      ),
+    ),
+    inputDecorationTheme: InputDecorationTheme(
+      filled: true,
+      fillColor: AppColors.surface.withValues(alpha: 0.6),
+      labelStyle: const TextStyle(color: AppColors.textSecondary),
+      hintStyle: const TextStyle(color: AppColors.textSecondary),
+      border: OutlineInputBorder(
+        borderRadius: BorderRadius.circular(20),
+        borderSide: const BorderSide(color: AppColors.glassStroke),
+      ),
+      enabledBorder: OutlineInputBorder(
+        borderRadius: BorderRadius.circular(20),
+        borderSide: const BorderSide(color: AppColors.glassStroke),
+      ),
+      focusedBorder: OutlineInputBorder(
+        borderRadius: BorderRadius.circular(20),
+        borderSide: const BorderSide(color: AppColors.accent),
       ),
     ),
   );
