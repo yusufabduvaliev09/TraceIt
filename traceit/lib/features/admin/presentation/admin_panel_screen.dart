@@ -1,9 +1,13 @@
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
 import 'package:traceit/features/auth/presentation/auth_provider.dart';
 import 'package:traceit/features/cargo/data/cargo_service.dart';
 import 'package:traceit/features/cargo/domain/client_model.dart';
 import 'package:traceit/features/cargo/domain/cargo_model.dart';
+import 'package:traceit/features/cargo/domain/cargo_status.dart';
+import 'package:traceit/features/pvz/data/pvz_service.dart';
+import 'package:traceit/features/pvz/domain/pvz_model.dart';
 
 class AdminPanelScreen extends StatefulWidget {
   const AdminPanelScreen({super.key});
@@ -14,12 +18,7 @@ class AdminPanelScreen extends StatefulWidget {
 
 class _AdminPanelScreenState extends State<AdminPanelScreen> {
   final CargoService _cargoService = CargoService();
-  final _pvzOptions = const [
-    'Бишкек, Склад №1',
-    'Ош, Склад №2',
-    'Чуй, Склад №3',
-    'Иссык-Куль, Склад №4',
-  ];
+  final PvzService _pvzService = PvzService();
 
   final _titleController = TextEditingController();
   final _descriptionController = TextEditingController();
@@ -88,8 +87,8 @@ class _AdminPanelScreenState extends State<AdminPanelScreen> {
     if (_selectedForBulk.isEmpty) return;
     await _cargoService.bulkUpdateCargoStatus(
       cargoIds: _selectedForBulk.toList(),
-      fromStatus: 'transit',
-      toStatus: 'warehouse',
+      fromStatus: CargoStatusKeys.transit,
+      toStatus: CargoStatusKeys.warehouseChina,
     );
     if (!mounted) return;
     setState(_selectedForBulk.clear);
@@ -112,30 +111,81 @@ class _AdminPanelScreenState extends State<AdminPanelScreen> {
               child: Text('You do not have access to Admin Panel'),
             );
           }
-          return StreamBuilder<List<ClientModel>>(
-            stream: _cargoService.getAllUsers(),
-            builder: (context, userSnapshot) {
-              final users = userSnapshot.data ?? [];
-              return ListView(
-                padding: const EdgeInsets.all(16),
-                children: [
-                  ExpansionTile(
+          return StreamBuilder<List<PvzModel>>(
+            stream: _pvzService.watchPvzList(),
+            builder: (context, pvzSnapshot) {
+              final pvzList = pvzSnapshot.data ?? [];
+              return StreamBuilder<List<ClientModel>>(
+                stream: _cargoService.getAllUsers(),
+                builder: (context, userSnapshot) {
+                  final users = userSnapshot.data ?? [];
+                  return ListView(
+                    padding: const EdgeInsets.all(16),
+                    children: [
+                      Card(
+                        margin: const EdgeInsets.only(bottom: 16),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.stretch,
+                          children: [
+                            const ListTile(
+                              leading: Icon(Icons.tune),
+                              title: Text('Настройки администратора'),
+                              subtitle: Text(
+                                'ПВЗ, шаблон адреса Китая, WhatsApp',
+                              ),
+                            ),
+                            ListTile(
+                              leading: const Icon(Icons.storefront_outlined),
+                              title: const Text('Управление ПВЗ'),
+                              trailing: const Icon(Icons.chevron_right),
+                              onTap: () =>
+                                  context.push('/admin/settings/pvz'),
+                            ),
+                            ListTile(
+                              leading: const Icon(Icons.place_outlined),
+                              title: const Text('Шаблон адреса (Китай)'),
+                              trailing: const Icon(Icons.chevron_right),
+                              onTap: () =>
+                                  context.push('/admin/settings/china-template'),
+                            ),
+                            ListTile(
+                              leading: const Icon(Icons.chat_outlined),
+                              title: const Text('WhatsApp шаблоны'),
+                              trailing: const Icon(Icons.chevron_right),
+                              onTap: () => context.push(
+                                '/admin/settings/whatsapp',
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                      ExpansionTile(
                     initiallyExpanded: true,
                     title: const Text('Cargo Management'),
                     childrenPadding: const EdgeInsets.all(12),
                     children: [
-                      DropdownButtonFormField<String>(
-                        value: _selectedClientUid,
-                        hint: const Text('Выберите клиента'),
-                        items: users
-                            .map(
-                              (u) => DropdownMenuItem(
-                                value: u.uid,
-                                child: Text('${u.name} (${u.customerId})'),
-                              ),
-                            )
-                            .toList(),
-                        onChanged: (value) => setState(() => _selectedClientUid = value),
+                      InputDecorator(
+                        decoration: const InputDecoration(
+                          labelText: 'Клиент',
+                          border: OutlineInputBorder(),
+                        ),
+                        child: DropdownButtonHideUnderline(
+                          child: DropdownButton<String>(
+                            isExpanded: true,
+                            value: _selectedClientUid,
+                            hint: const Text('Выберите клиента'),
+                            items: users
+                                .map(
+                                  (u) => DropdownMenuItem(
+                                    value: u.uid,
+                                    child: Text('${u.name} (${u.customerId})'),
+                                  ),
+                                )
+                                .toList(),
+                            onChanged: (value) =>
+                                setState(() => _selectedClientUid = value),
+                          ),
+                        ),
                       ),
                       const SizedBox(height: 8),
                       TextField(
@@ -192,7 +242,7 @@ class _AdminPanelScreenState extends State<AdminPanelScreen> {
                               ),
                               ElevatedButton(
                                 onPressed: _applyBulkTransitToWarehouse,
-                                child: const Text('Массово: В пути -> На складе'),
+                                child: const Text('Массово: В пути -> На складе в Китае'),
                               ),
                             ],
                           );
@@ -200,52 +250,76 @@ class _AdminPanelScreenState extends State<AdminPanelScreen> {
                       ),
                     ],
                   ),
-                  ExpansionTile(
+                      ExpansionTile(
                     title: const Text('Client Control'),
                     childrenPadding: const EdgeInsets.all(12),
                     children: users
                         .map(
-                          (client) => Card(
-                            child: ListTile(
-                              title: Text('${client.name} · ${client.customerId}'),
-                              subtitle: Text('${client.phone}\nPVZ: ${client.pvz}'),
-                              isThreeLine: true,
-                              trailing: Column(
-                                mainAxisSize: MainAxisSize.min,
-                                children: [
-                                  Switch(
-                                    value: client.isBlocked,
-                                    onChanged: (value) => _cargoService.setUserBlocked(
-                                      uid: client.uid,
-                                      isBlocked: value,
-                                    ),
+                          (client) {
+                            String? pvzValue = client.pvzDocId;
+                            if (pvzValue != null &&
+                                !pvzList.any((p) => p.id == pvzValue)) {
+                              pvzValue = null;
+                            }
+                            return Card(
+                              child: ListTile(
+                                title: Text(
+                                    '${client.name} · ${client.customerId}'),
+                                subtitle: Text(
+                                    '${client.phone}\nПВЗ: ${client.pvz}'),
+                                isThreeLine: true,
+                                trailing: SizedBox(
+                                  width: 160,
+                                  child: Column(
+                                    mainAxisSize: MainAxisSize.min,
+                                    crossAxisAlignment: CrossAxisAlignment.end,
+                                    children: [
+                                      Switch(
+                                        value: client.isBlocked,
+                                        onChanged: (value) => _cargoService
+                                            .setUserBlocked(
+                                          uid: client.uid,
+                                          isBlocked: value,
+                                        ),
+                                      ),
+                                      if (pvzList.isNotEmpty)
+                                        DropdownButton<String>(
+                                          value: pvzValue,
+                                          hint: const Text('ПВЗ'),
+                                          isExpanded: true,
+                                          items: pvzList
+                                              .map(
+                                                (p) => DropdownMenuItem(
+                                                  value: p.id,
+                                                  child: Text(
+                                                    p.displayLabel,
+                                                    overflow:
+                                                        TextOverflow.ellipsis,
+                                                  ),
+                                                ),
+                                              )
+                                              .toList(),
+                                          onChanged: pvzList.isEmpty
+                                              ? null
+                                              : (id) {
+                                                  if (id == null) return;
+                                                  _cargoService
+                                                      .updateUserPvzFromDoc(
+                                                    uid: client.uid,
+                                                    pvzDocId: id,
+                                                  );
+                                                },
+                                        ),
+                                    ],
                                   ),
-                                  DropdownButton<String>(
-                                    value: _pvzOptions.contains(client.pvz)
-                                        ? client.pvz
-                                        : _pvzOptions.first,
-                                    items: _pvzOptions
-                                        .map((pvz) => DropdownMenuItem(
-                                              value: pvz,
-                                              child: Text(pvz),
-                                            ))
-                                        .toList(),
-                                    onChanged: (value) {
-                                      if (value == null) return;
-                                      _cargoService.updateUserPvz(
-                                        uid: client.uid,
-                                        pvz: value,
-                                      );
-                                    },
-                                  ),
-                                ],
+                                ),
                               ),
-                            ),
-                          ),
+                            );
+                          },
                         )
                         .toList(),
                   ),
-                  ExpansionTile(
+                      ExpansionTile(
                     title: const Text('Notifications'),
                     childrenPadding: const EdgeInsets.all(12),
                     children: [
@@ -266,7 +340,9 @@ class _AdminPanelScreenState extends State<AdminPanelScreen> {
                       ),
                     ],
                   ),
-                ],
+                    ],
+                  );
+                },
               );
             },
           );

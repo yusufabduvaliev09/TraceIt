@@ -32,7 +32,7 @@ class CargoApp extends StatelessWidget {
       create: (_) => AuthProvider(),
       child: MaterialApp.router(
         debugShowCheckedModeBanner: false,
-        title: 'TraceIt Cargo',
+        title: 'ABU Cargo',
         theme: AppTheme.darkTheme,
         routerConfig: appRouter,
       ),

@@ -5,6 +5,8 @@ import 'package:provider/provider.dart';
 import 'package:traceit/features/auth/components/auth_gradient_button.dart';
 import 'package:traceit/features/auth/components/kg_phone_formatter.dart';
 import 'package:traceit/features/auth/presentation/auth_provider.dart';
+import 'package:traceit/features/pvz/data/pvz_service.dart';
+import 'package:traceit/features/pvz/domain/pvz_model.dart';
 
 class RegisterScreen extends StatefulWidget {
   const RegisterScreen({super.key});
@@ -18,14 +20,8 @@ class _RegisterScreenState extends State<RegisterScreen> {
   final _phoneController = TextEditingController(text: KgPhoneFormatter.prefix);
   final _passwordController = TextEditingController();
   final _formKey = GlobalKey<FormState>();
-  String _selectedPvz = 'Бишкек, Склад №1';
-
-  final List<String> _pvzOptions = const [
-    'Бишкек, Склад №1',
-    'Ош, Склад №2',
-    'Чуй, Склад №3',
-    'Иссык-Куль, Склад №4',
-  ];
+  String? _selectedPvzDocId;
+  final _pvzService = PvzService();
 
   @override
   void dispose() {
@@ -37,12 +33,18 @@ class _RegisterScreenState extends State<RegisterScreen> {
 
   Future<void> _submit() async {
     if (!_formKey.currentState!.validate()) return;
+    if (_selectedPvzDocId == null || _selectedPvzDocId!.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Выберите ПВЗ')),
+      );
+      return;
+    }
     final auth = context.read<AuthProvider>();
     await auth.register(
       name: _nameController.text,
       phone: _phoneController.text,
       password: _passwordController.text,
-      pvz: _selectedPvz,
+      pvzDocId: _selectedPvzDocId!,
     );
     if (!mounted) return;
     if (auth.errorMessage != null) {
@@ -96,19 +98,51 @@ class _RegisterScreenState extends State<RegisterScreen> {
                 (value == null || value.length < 6) ? 'Минимум 6 символов' : null,
           ),
           const SizedBox(height: 12),
-          DropdownButtonFormField<String>(
-            initialValue: _selectedPvz,
-            decoration: const InputDecoration(
-              labelText: 'Выберите ПВЗ',
-              prefixIcon: Icon(FontAwesomeIcons.warehouse),
-            ),
-            items: _pvzOptions
-                .map((pvz) => DropdownMenuItem(value: pvz, child: Text(pvz)))
-                .toList(),
-            onChanged: (value) {
-              if (value != null) {
-                setState(() => _selectedPvz = value);
+          StreamBuilder<List<PvzModel>>(
+            stream: _pvzService.watchPvzList(),
+            builder: (context, snapshot) {
+              if (snapshot.connectionState == ConnectionState.waiting) {
+                return const Padding(
+                  padding: EdgeInsets.all(16),
+                  child: Center(child: CircularProgressIndicator()),
+                );
               }
+              final list = snapshot.data ?? [];
+              if (list.isEmpty) {
+                return const Padding(
+                  padding: EdgeInsets.all(8),
+                  child: Text(
+                    'ПВЗ пока не добавлены. Обратитесь к администратору.',
+                    style: TextStyle(color: Colors.orangeAccent),
+                  ),
+                );
+              }
+              return InputDecorator(
+                decoration: const InputDecoration(
+                  labelText: 'Выберите ПВЗ',
+                  prefixIcon: Icon(FontAwesomeIcons.warehouse),
+                  border: OutlineInputBorder(),
+                ),
+                child: DropdownButtonHideUnderline(
+                  child: DropdownButton<String>(
+                    isExpanded: true,
+                    value: _selectedPvzDocId != null &&
+                            list.any((p) => p.id == _selectedPvzDocId)
+                        ? _selectedPvzDocId
+                        : null,
+                    hint: const Text('Пункт выдачи'),
+                    items: list
+                        .map(
+                          (p) => DropdownMenuItem(
+                            value: p.id,
+                            child: Text(p.displayLabel),
+                          ),
+                        )
+                        .toList(),
+                    onChanged: (v) => setState(() => _selectedPvzDocId = v),
+                  ),
+                ),
+              );
             },
           ),
           const SizedBox(height: 20),

@@ -23,13 +23,13 @@ class AuthProvider extends ChangeNotifier {
     required String name,
     required String phone,
     required String password,
-    required String pvz,
+    required String pvzDocId,
   }) async {
     await _run(() => _service.register(
           name: name,
           phone: phone,
           password: password,
-          pvz: pvz,
+          pvzDocId: pvzDocId,
         ));
   }
 

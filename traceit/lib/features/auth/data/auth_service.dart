@@ -1,5 +1,3 @@
-import 'dart:math';
-
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 
@@ -22,7 +20,7 @@ class AuthService {
     required String name,
     required String phone,
     required String password,
-    required String pvz,
+    required String pvzDocId,
   }) async {
     final normalizedPhone = _normalizePhone(phone);
     final email = _emailFromPhone(normalizedPhone);
@@ -33,18 +31,68 @@ class AuthService {
     );
 
     final uid = credential.user!.uid;
-    final customerId = await _generateUniqueCustomerId();
-    final isAdminAllowlisted = _adminAllowlistPhones.contains(normalizedPhone);
-    await _firestore.collection('users').doc(uid).set({
-      'uid': uid,
-      'name': name.trim(),
-      'phone': normalizedPhone,
-      'pvz': pvz,
-      'customerId': customerId,
-      'role': isAdminAllowlisted ? 'admin' : 'user',
-      'isBlocked': false,
-      'createdAt': FieldValue.serverTimestamp(),
-    });
+
+    try {
+      await _firestore.runTransaction((transaction) async {
+        final pvzRef = _firestore.collection('pvz').doc(pvzDocId);
+        final pvzSnap = await transaction.get(pvzRef);
+        if (!pvzSnap.exists) {
+          throw FirebaseAuthException(
+            code: 'invalid-pvz',
+            message: 'Выбранный ПВЗ не найден.',
+          );
+        }
+        final d = pvzSnap.data()!;
+        final code = (d['code'] ?? '').toString().trim().toUpperCase();
+        if (code.isEmpty) {
+          throw FirebaseAuthException(
+            code: 'invalid-pvz',
+            message: 'У ПВЗ не задан код.',
+          );
+        }
+        final last = d['lastCustomerSeq'] is int
+            ? d['lastCustomerSeq'] as int
+            : (d['lastCustomerSeq'] as num?)?.toInt() ?? 0;
+        final next = last + 1;
+        final customerId = '$code$next';
+        final pvzName = (d['name'] ?? '').toString().trim();
+        final pvzAddress = (d['address'] ?? '').toString().trim();
+        final pvzDisplay = pvzName.isNotEmpty ? pvzName : code;
+
+        transaction.update(pvzRef, {'lastCustomerSeq': next});
+
+        final userRef = _firestore.collection('users').doc(uid);
+        final isAdminAllowlisted =
+            _adminAllowlistPhones.contains(normalizedPhone);
+        transaction.set(userRef, {
+          'uid': uid,
+          'name': name.trim(),
+          'phone': normalizedPhone,
+          'pvzDocId': pvzDocId,
+          'pvzCode': code,
+          'pvzName': pvzName,
+          'pvzAddress': pvzAddress,
+          'pvz': pvzDisplay,
+          'customerId': customerId,
+          'role': isAdminAllowlisted ? 'admin' : 'user',
+          'isBlocked': false,
+          'createdAt': FieldValue.serverTimestamp(),
+        });
+      });
+    } on FirebaseAuthException catch (_) {
+      try {
+        await credential.user?.delete();
+      } catch (_) {}
+      rethrow;
+    } catch (_) {
+      try {
+        await credential.user?.delete();
+      } catch (_) {}
+      throw FirebaseAuthException(
+        code: 'registration-failed',
+        message: 'Не удалось завершить регистрацию. Попробуйте снова.',
+      );
+    }
   }
 
   Future<void> login({
@@ -94,22 +142,4 @@ class AuthService {
     return '+$digits';
   }
 
-  String _generateCustomerId() {
-    final random = Random();
-    final code = 1000 + random.nextInt(9000);
-    return 'TR-$code';
-  }
-
-  Future<String> _generateUniqueCustomerId() async {
-    for (var i = 0; i < 10; i++) {
-      final id = _generateCustomerId();
-      final exists = await _firestore
-          .collection('users')
-          .where('customerId', isEqualTo: id)
-          .limit(1)
-          .get();
-      if (exists.docs.isEmpty) return id;
-    }
-    return 'TR-${DateTime.now().millisecondsSinceEpoch.toString().substring(8)}';
-  }
 }

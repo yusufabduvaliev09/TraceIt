@@ -5,6 +5,7 @@ class ClientModel {
     required this.phone,
     required this.customerId,
     required this.pvz,
+    this.pvzDocId,
     required this.role,
     required this.isBlocked,
   });
@@ -14,6 +15,7 @@ class ClientModel {
   final String phone;
   final String customerId;
   final String pvz;
+  final String? pvzDocId;
   final String role;
   final bool isBlocked;
 
@@ -24,6 +26,7 @@ class ClientModel {
       phone: (json['phone'] ?? '').toString(),
       customerId: (json['customerId'] ?? '').toString(),
       pvz: (json['pvz'] ?? '').toString(),
+      pvzDocId: json['pvzDocId']?.toString(),
       role: (json['role'] ?? 'user').toString(),
       isBlocked: (json['isBlocked'] ?? false) == true,
     );

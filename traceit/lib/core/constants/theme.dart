@@ -3,9 +3,9 @@ import 'package:traceit/core/constants/colors.dart';
 
 class AppTheme {
   static ThemeData darkTheme = ThemeData(
+    useMaterial3: true,
     brightness: Brightness.dark,
     scaffoldBackgroundColor: AppColors.background,
-    fontFamily: 'SF Pro Display',
     colorScheme: const ColorScheme.dark(
       primary: AppColors.accent,
       secondary: AppColors.accent,

@@ -1,10 +1,12 @@
+import 'package:traceit/features/cargo/domain/cargo_status.dart';
+
 class CargoModel {
   final String id;           // Posilkaning bazadagi noyob ID raqami
   final String title;        // Posilka nomi (masalan: "Oshxonaga pichoq")
   final String description;
   final String trackCode;    // Trek-kod (Pinduoduo yoki boshqa joydan)
   final double weight;       // Posilkaning vazni (kg da)
-  final String status;       // Holati: pending, transit, warehouse, delivered
+  final String status;       // See [CargoStatusKeys]
   final DateTime createdAt;  // Ro'yxatga olingan vaqti
 
   // Konstruktor - bu modelga ma'lumotlarni solish uchun kerak
@@ -27,7 +29,7 @@ class CargoModel {
       description: json['description'] ?? '',
       trackCode: json['trackCode'] ?? '',
       weight: (json['weight'] ?? 0.0).toDouble(), // Sonni double formatga o'tkazish
-      status: json['status'] ?? 'pending',
+      status: CargoStatusKeys.normalize(json['status']?.toString()),
       createdAt: (json['createdAt'] != null) 
           ? json['createdAt'].toDate() 
           : DateTime.now(),
